@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Auto supirkimas - Užklausa</title>
+  <title>Auto supirkimo užklausa</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -53,7 +53,7 @@
 
   <h1>Auto supirkimo užklausa</h1>
 
-  <form id="auto-form">
+  <form id="auto-form" enctype="multipart/form-data">
     <label for="vardas">Vardas:</label>
     <input type="text" id="vardas" name="vardas" required />
 
@@ -63,10 +63,81 @@
     <label for="automobilis">Automobilis:</label>
     <input type="text" id="automobilis" name="automobilis" required />
 
+    <label for="nuotrauka">Nuotrauka:</label>
+    <input type="file" id="nuotrauka" name="nuotrauka" accept="image/*" required />
+
     <button type="submit">Siųsti</button>
   </form>
 
   <p id="status"></p>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCkI9-ExCDK3VTeN0Iae3-rEufq6u-_kI4",
+      authDomain: "arnoauto-d993a.firebaseapp.com",
+      projectId: "arnoauto-d993a",
+      storageBucket: "arnoauto-d993a.appspot.com",
+      messagingSenderId: "498594540",
+      appId: "G498594540"
+    };
+
+    // Inicializuojame Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+
+    document.getElementById("auto-form").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const vardas = document.getElementById("vardas").value.trim();
+      const telefonas = document.getElementById("telefonas").value.trim();
+      const automobilis = document.getElementById("automobilis").value.trim();
+      const nuotraukaFile = document.getElementById("nuotrauka").files[0];
+
+      if (!nuotraukaFile) {
+        alert("Prašome pridėti nuotrauką");
+        return;
+      }
+
+      try {
+        // Sukuriam unikalų failo pavadinimą
+        const fileName = `${Date.now()}_${nuotraukaFile.name}`;
+        const storageRef = storage.ref().child('nuotraukos/' + fileName);
+
+        // Įkeliame nuotrauką į Storage
+        const snapshot = await storageRef.put(nuotraukaFile);
+
+        // Gaunam įkeltos nuotraukos URL
+        const photoURL = await snapshot.ref.getDownloadURL();
+
+        // Įrašom duomenis į Firestore kartu su nuotraukos URL
+        await db.collection("formos-duomenys").add({
+          vardas: vardas,
+          telefonas: telefonas,
+          automobilis: automobilis,
+          nuotraukaURL: photoURL,
+          timestamp: new Date()
+        });
+
+        // Nukreipimas į padėkos puslapį
+        window.location.href = "padekos.html";
+
+      } catch (error) {
+        console.error("Klaida siunčiant duomenis:", error);
+        const statusEl = document.getElementById("status");
+        statusEl.textContent = "❌ Nepavyko išsiųsti duomenų.";
+        statusEl.style.color = "red";
+      }
+    });
+  </script>
+
+</body>
+</html>  <p id="status"></p>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
