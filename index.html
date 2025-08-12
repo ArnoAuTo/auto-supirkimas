@@ -10,7 +10,6 @@
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
-
     body {
       font-family: Arial, sans-serif;
       background: linear-gradient(-45deg, #000000, #111111, #000000, #111111);
@@ -27,7 +26,16 @@
     }
     h1 {
       text-align: center;
+      margin-bottom: 5px;
+    }
+    p.slogan {
+      text-align: center;
+      color: #FFD700;
+      font-weight: bold;
+      text-shadow: 0 0 6px #FFD700;
+      margin-top: 0;
       margin-bottom: 20px;
+      font-size: 1.1rem;
     }
     label {
       display: block;
@@ -88,6 +96,22 @@
       text-align: center;
       color: #FFD700;
     }
+    /* Progress bar */
+    #progress-container {
+      width: 100%;
+      background-color: #333;
+      border-radius: 10px;
+      margin-top: 15px;
+      height: 20px;
+      overflow: hidden;
+      display: none;
+    }
+    #progress-bar {
+      height: 100%;
+      background-color: #FFD700;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
     form {
       animation: fadeIn 1s ease forwards;
       opacity: 0;
@@ -105,7 +129,6 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'G-498594540');
   </script>
   <!-- End Google Analytics -->
@@ -114,25 +137,30 @@
 <body>
 
   <h1>ArnoAuTo supirkimas</h1>
+  <p class="slogan">Visoje Lietuvoje visa para 24/7</p>
 
   <form id="auto-form" enctype="multipart/form-data">
-    <label for="vardas">Vardas:</label>
-    <input type="text" id="vardas" name="vardas" required placeholder="Įveskite vardą" />
+    <label for="telefonas">Jūsų telefono numeris:</label>
+    <input type="tel" id="telefonas" name="telefonas" required placeholder="Įveskite telefono numerį" />
 
-    <label for="telefonas">Telefonas:</label>
-    <input type="tel" id="telefonas" name="telefonas" required placeholder="Įveskite telefoną" />
+    <label for="automobilis">Automobilio modelis/metai:</label>
+    <input type="text" id="automobilis" name="automobilis" required placeholder="Įveskite automobilio modelį ir metus" />
 
-    <label for="automobilis">Automobilis:</label>
-    <input type="text" id="automobilis" name="automobilis" required placeholder="Įveskite automobilį" />
-
-    <label for="komentaras">Komentaras apie pliusus ir defektus:</label>
+    <label for="komentaras">Automobilio informacija privalumai ir defektai:</label>
     <textarea id="komentaras" name="komentaras" placeholder="Aprašykite automobilio privalumus ir defektus"></textarea>
 
-    <label for="nuotrauka">Nuotrauka:</label>
-    <input type="file" id="nuotrauka" name="nuotrauka" accept="image/*" required />
+    <label for="kaina">Norima kaina:</label>
+    <input type="text" id="kaina" name="kaina" placeholder="Nurodykite norimą kainą" />
+
+    <label for="nuotrauka">Nuotraukos:</label>
+    <input type="file" id="nuotrauka" name="nuotrauka" accept="image/*" required multiple />
 
     <button type="submit">Siųsti</button>
   </form>
+
+  <div id="progress-container">
+    <div id="progress-bar"></div>
+  </div>
 
   <p id="status"></p>
 
@@ -156,38 +184,86 @@
     const db = firebase.firestore();
     const storage = firebase.storage();
 
-    document.getElementById("auto-form").addEventListener("submit", async function(e) {
+    // Telefonas validacija: leidžiame tik skaičius, +, tarpus, -; turi būti bent 7 simboliai
+    function validatePhone(phone) {
+      const regex = /^[\d +\-]{7,}$/;
+      return regex.test(phone);
+    }
+
+    const form = document.getElementById("auto-form");
+    const statusEl = document.getElementById("status");
+    const progressContainer = document.getElementById("progress-container");
+    const progressBar = document.getElementById("progress-bar");
+
+    form.addEventListener("submit", async function(e) {
       e.preventDefault();
 
-      const vardas = document.getElementById("vardas").value.trim();
+      statusEl.textContent = "";
+      statusEl.style.color = "#FFD700";
+
       const telefonas = document.getElementById("telefonas").value.trim();
       const automobilis = document.getElementById("automobilis").value.trim();
       const komentaras = document.getElementById("komentaras").value.trim();
-      const nuotraukaFile = document.getElementById("nuotrauka").files[0];
+      const kaina = document.getElementById("kaina").value.trim();
+      const nuotraukos = document.getElementById("nuotrauka").files;
 
-      if (!nuotraukaFile) {
-        alert("Prašome pridėti nuotrauką");
+      // Validacija
+      if (!validatePhone(telefonas)) {
+        statusEl.textContent = "❌ Įveskite teisingą telefono numerį (tik skaičiai, +, tarpai, -)";
+        statusEl.style.color = "red";
+        return;
+      }
+      if (automobilis.length < 3) {
+        statusEl.textContent = "❌ Įveskite automobilio modelį ir metus";
+        statusEl.style.color = "red";
+        return;
+      }
+      if (nuotraukos.length === 0) {
+        statusEl.textContent = "❌ Prašome pridėti bent vieną nuotrauką";
+        statusEl.style.color = "red";
         return;
       }
 
       try {
-        // Sukuriam unikalų failo pavadinimą
-        const fileName = `${Date.now()}_${nuotraukaFile.name}`;
-        const storageRef = storage.ref().child('nuotraukos/' + fileName);
+        progressContainer.style.display = "block";
+        progressBar.style.width = "0%";
 
-        // Įkeliame nuotrauką į Storage
-        const snapshot = await storageRef.put(nuotraukaFile);
+        const photoURLs = [];
+        let totalFiles = nuotraukos.length;
+        let uploadedFiles = 0;
 
-        // Gaunam įkeltos nuotraukos URL
-        const photoURL = await snapshot.ref.getDownloadURL();
+        for (let i = 0; i < nuotraukos.length; i++) {
+          const file = nuotraukos[i];
+          const fileName = `${Date.now()}_${file.name}`;
+          const storageRef = storage.ref().child('nuotraukos/' + fileName);
 
-        // Įrašom duomenis į Firestore kartu su nuotraukos URL
+          // Įkėlimo progresas per .put() nepalaikomas tiesiogiai, todėl naudosim snapshot event
+          const uploadTask = storageRef.put(file);
+
+          await new Promise((resolve, reject) => {
+            uploadTask.on('state_changed', (snapshot) => {
+              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              // Apskaičiuojam bendrą progresą (su visomis bylos)
+              const totalProgress = ((uploadedFiles + progress / 100) / totalFiles) * 100;
+              progressBar.style.width = totalProgress + "%";
+            }, (error) => {
+              reject(error);
+            }, async () => {
+              const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+              photoURLs.push(downloadURL);
+              uploadedFiles++;
+              resolve();
+            });
+          });
+        }
+
+        // Įrašom duomenis į Firestore
         await db.collection("formos-duomenys").add({
-          vardas: vardas,
           telefonas: telefonas,
           automobilis: automobilis,
           komentaras: komentaras,
-          nuotraukaURL: photoURL,
+          kaina: kaina,
+          nuotraukosURL: photoURLs,
           timestamp: new Date()
         });
 
@@ -196,9 +272,9 @@
 
       } catch (error) {
         console.error("Klaida siunčiant duomenis:", error);
-        const statusEl = document.getElementById("status");
         statusEl.textContent = "❌ Nepavyko išsiųsti duomenų.";
         statusEl.style.color = "red";
+        progressContainer.style.display = "none";
       }
     });
   </script>
