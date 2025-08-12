@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ArnoAuTo supirkimo užklausa</title>
+  <style>
+    @keyframes backgroundGradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(-45deg, #000000, #111111, #000000, #111111);
+      background-size: 400% 400%;
+      animation: backgroundGradient 15s ease infinite;
+      color: #FFD700;
+      padding: 30px;
+      max-width: 500px;
+      margin: auto;
+    }
+    h1, label {
+      color: #FFD700;
+      text-shadow: 0 0 8px #FFD700, 0 0 20px #FFD700;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input, button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+      border-radius: 4px;
+      border: none;
+      font-size: 16px;
+      background: #222222;
+      color: #FFD700;
+      transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+    input::placeholder {
+      color: #bfa832;
+    }
+    input[type="text"]:focus,
+    input[type="tel"]:focus,
+    input[type="file"]:focus {
+      outline: none;
+      box-shadow: 0 0 8px #FFD700;
+      border: 1px solid #FFD700;
+      background: #222222;
+      color: #FFD700;
+    }
+    button {
+      margin-top: 20px;
+      background: #FFD700;
+      color: #000000;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 0 10px #FFD700;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.1s ease;
+    }
+    button:hover {
+      background: #e6c200;
+      box-shadow: 0 0 20px #FFD700, 0 0 40px #FFD700;
+    }
+    button:active {
+      transform: scale(0.95);
+      box-shadow: 0 0 5px #c1a500 inset;
+    }
+    #status {
+      margin-top: 15px;
+      font-weight: bold;
+      text-align: center;
+      color: #FFD700;
+    }
+    #padeka {
+      display: none;
+      text-align: center;
+      font-size: 1.2rem;
+      margin-top: 30px;
+      font-weight: bold;
+      color: #FFD700;
+      text-shadow: 0 0 8px #FFD700, 0 0 20px #FFD700;
+    }
+    form {
+      animation: fadeIn 1s ease forwards;
+      opacity: 0;
+    }
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+  </style>
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-498594540"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-498594540');
+  </script>
+  <!-- End Google Analytics -->
+
+</head>
+<body>
+
+  <h1>Auto supirkimo užklausa</h1>
+
+  <form id="auto-form" enctype="multipart/form-data">
+    <label for="vardas">Vardas:</label>
+    <input type="text" id="vardas" name="vardas" required placeholder="Įveskite vardą" />
+
+    <label for="telefonas">Telefonas:</label>
+    <input type="tel" id="telefonas" name="telefonas" required placeholder="Įveskite telefoną" />
+
+    <label for="automobilis">Automobilis:</label>
+    <input type="text" id="automobilis" name="automobilis" required placeholder="Įveskite automobilį" />
+
+    <label for="nuotrauka">Nuotrauka:</label>
+    <input type="file" id="nuotrauka" name="nuotrauka" accept="image/*" required />
+
+    <button type="submit">Siųsti</button>
+  </form>
+
+  <p id="status"></p>
+  <div id="padeka">✅ Ačiū! Jūsų užklausa gauta.</div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCkI9-ExCDK3VTeN0Iae3-rEufq6u-_kI4",
+      authDomain: "arnoauto-d993a.firebaseapp.com",
+      projectId: "arnoauto-d993a",
+      storageBucket: "arnoauto-d993a.appspot.com",
+      messagingSenderId: "498594540",
+      appId: "G498594540"
+    };
+
+    // Inicializuojame Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+
+    document.getElementById("auto-form").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const vardas = document.getElementById("vardas").value.trim();
+      const telefonas = document.getElementById("telefonas").value.trim();
+      const automobilis = document.getElementById("automobilis").value.trim();
+      const nuotraukaFile = document.getElementById("nuotrauka").files[0];
+
+      if (!nuotraukaFile) {
+        alert("Prašome pridėti nuotrauką");
+        return;
+      }
+
+      try {
+        // Sukuriam unikalų failo pavadinimą
+        const fileName = `${Date.now()}_${nuotraukaFile.name}`;
+        const storageRef = storage.ref().child('nuotraukos/' + fileName);
+
+        // Įkeliame nuotrauką į Storage
+        const snapshot = await storageRef.put(nuotraukaFile);
+
+        // Gaunam įkeltos nuotraukos URL
+        const photoURL = await snapshot.ref.getDownloadURL();
+
+        // Įrašom duomenis į Firestore kartu su nuotraukos URL
+        await db.collection("formos-duomenys").add({
+          vardas: vardas,
+          telefonas: telefonas,
+          automobilis: automobilis,
+          nuotraukaURL: photoURL,
+          timestamp: new Date()
+        });
+
+        // Rodyti padėką ir slėpti formą bei statusą
+        document.getElementById("padeka").style.display = "block";
+        document.getElementById("auto-form").style.display = "none";
+        document.getElementById("status").style.display = "none";
+
+      } catch (error) {
+        console.error("Klaida siunčiant duomenis:", error);
+        const statusEl = document.getElementById("status");
+        statusEl.textContent = "❌ Nepavyko išsiųsti duomenų.";
+        statusEl.style.color = "red";
+      }
+    });
+  </script>
+
+</body>
+</html>
