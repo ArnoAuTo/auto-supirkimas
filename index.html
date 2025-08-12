@@ -237,13 +237,11 @@
           const fileName = `${Date.now()}_${file.name}`;
           const storageRef = storage.ref().child('nuotraukos/' + fileName);
 
-          // Įkėlimo progresas per .put() nepalaikomas tiesiogiai, todėl naudosim snapshot event
           const uploadTask = storageRef.put(file);
 
           await new Promise((resolve, reject) => {
             uploadTask.on('state_changed', (snapshot) => {
               const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-              // Apskaičiuojam bendrą progresą (su visomis bylos)
               const totalProgress = ((uploadedFiles + progress / 100) / totalFiles) * 100;
               progressBar.style.width = totalProgress + "%";
             }, (error) => {
@@ -267,8 +265,12 @@
           timestamp: new Date()
         });
 
-        // Nukreipimas į padėkos puslapį
-        window.location.href = "padekos.html";
+        // Parodyti statusą
+        statusEl.textContent = "✅ Užklausa išsiųsta! Nukreipiame į padėką...";
+
+        setTimeout(() => {
+          window.location.href = "padekos.html";
+        }, 2000);
 
       } catch (error) {
         console.error("Klaida siunčiant duomenis:", error);
