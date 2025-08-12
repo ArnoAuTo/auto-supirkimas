@@ -34,7 +34,7 @@
       margin-top: 15px;
       font-weight: bold;
     }
-    input, button {
+    input, button, textarea {
       width: 100%;
       padding: 8px;
       margin-top: 5px;
@@ -45,13 +45,20 @@
       background: #222222;
       color: #FFD700;
       transition: box-shadow 0.3s ease, border-color 0.3s ease;
+      font-family: Arial, sans-serif;
     }
-    input::placeholder {
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    input::placeholder,
+    textarea::placeholder {
       color: #bfa832;
     }
     input[type="text"]:focus,
     input[type="tel"]:focus,
-    input[type="file"]:focus {
+    input[type="file"]:focus,
+    textarea:focus {
       outline: none;
       box-shadow: 0 0 8px #FFD700;
       border: 1px solid #FFD700;
@@ -118,6 +125,9 @@
     <label for="automobilis">Automobilis:</label>
     <input type="text" id="automobilis" name="automobilis" required placeholder="Įveskite automobilį" />
 
+    <label for="komentaras">Komentaras apie pliusus ir defektus:</label>
+    <textarea id="komentaras" name="komentaras" placeholder="Aprašykite automobilio privalumus ir defektus"></textarea>
+
     <label for="nuotrauka">Nuotrauka:</label>
     <input type="file" id="nuotrauka" name="nuotrauka" accept="image/*" required />
 
@@ -152,6 +162,7 @@
       const vardas = document.getElementById("vardas").value.trim();
       const telefonas = document.getElementById("telefonas").value.trim();
       const automobilis = document.getElementById("automobilis").value.trim();
+      const komentaras = document.getElementById("komentaras").value.trim();
       const nuotraukaFile = document.getElementById("nuotrauka").files[0];
 
       if (!nuotraukaFile) {
@@ -175,6 +186,7 @@
           vardas: vardas,
           telefonas: telefonas,
           automobilis: automobilis,
+          komentaras: komentaras,
           nuotraukaURL: photoURL,
           timestamp: new Date()
         });
