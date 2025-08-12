@@ -5,63 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin - Formos įrašai</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      vertical-align: middle;
-      text-align: left;
-    }
-    th {
-      background: #333;
-      color: white;
-    }
-    img {
-      max-width: 100px;
-      height: auto;
-      border-radius: 4px;
-    }
-    #login {
-      text-align: center;
-      margin-top: 50px;
-    }
-    input[type="password"] {
-      padding: 8px;
-      font-size: 16px;
-    }
-    button {
-      padding: 8px 12px;
-      font-size: 16px;
-      cursor: pointer;
-    }
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+    #login, #content { max-width: 700px; margin: 40px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    #content { display: none; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: middle; }
+    th { background-color: #00796b; color: white; }
+    img { max-width: 100px; border-radius: 4px; }
+    input[type="password"] { width: 100%; padding: 10px; font-size: 16px; }
+    button { margin-top: 10px; padding: 10px 15px; font-size: 16px; background: #00796b; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #004d40; }
+    #error { color: red; margin-top: 10px; }
   </style>
 </head>
 <body>
-  <h1>Admin - Formos įrašai</h1>
 
-  <!-- Prisijungimo forma -->
   <div id="login">
-    <p>Įveskite slaptažodį:</p>
-    <input type="password" id="password" />
+    <h2>Įveskite slaptažodį</h2>
+    <input type="password" id="password" placeholder="Slaptažodis" />
     <button onclick="checkPassword()">Prisijungti</button>
-    <p id="error" style="color:red;"></p>
+    <p id="error"></p>
   </div>
 
-  <!-- Lentelė, rodoma tik po prisijungimo -->
-  <div id="content" style="display:none;">
+  <div id="content">
+    <h2>Formos įrašai</h2>
     <table>
       <thead>
         <tr>
@@ -92,40 +59,55 @@
       appId: "G498594540"
     };
 
-    let db;
+    let app, db;
 
     function checkPassword() {
       const pass = document.getElementById('password').value;
-      if (pass === "admin1997") {
-        document.getElementById('login').style.display = "none";
-        document.getElementById('content').style.display = "block";
+      const errorEl = document.getElementById('error');
+      if (pass === 'admin1997') {
+        errorEl.textContent = '';
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+        initFirebase();
         loadData();
       } else {
-        document.getElementById('error').textContent = "Neteisingas slaptažodis!";
+        errorEl.textContent = 'Neteisingas slaptažodis!';
+      }
+    }
+
+    function initFirebase() {
+      if (!app) {
+        app = firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
       }
     }
 
     function loadData() {
-      const app = firebase.initializeApp(firebaseConfig);
-      db = firebase.firestore();
-
       const tableBody = document.getElementById('data-table');
       db.collection("formos-duomenys").orderBy("timestamp", "desc").onSnapshot(snapshot => {
         tableBody.innerHTML = "";
+        if (snapshot.empty) {
+          tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Duomenų nėra</td></tr>';
+          return;
+        }
         snapshot.forEach(doc => {
           const data = doc.data();
+          const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleString() : '';
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td>${data.vardas || ''}</td>
             <td>${data.telefonas || ''}</td>
             <td>${data.automobilis || ''}</td>
             <td>${data.nuotraukaURL ? `<img src="${data.nuotraukaURL}" alt="Nuotrauka" />` : 'Nėra'}</td>
-            <td>${new Date(data.timestamp?.seconds * 1000).toLocaleString()}</td>
+            <td>${date}</td>
           `;
           tableBody.appendChild(tr);
         });
+      }, error => {
+        tableBody.innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Klaida įkeliant duomenis: ${error.message}</td></tr>`;
       });
     }
   </script>
+
 </body>
 </html>
