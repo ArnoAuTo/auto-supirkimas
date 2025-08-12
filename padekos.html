@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ačiū už užklausą!</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #000000, #111111);
+      color: #FFD700;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 20px;
+      text-shadow: 0 0 15px #FFD700;
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+    p {
+      font-size: 1.3rem;
+      margin-bottom: 40px;
+      text-shadow: 0 0 8px #FFD700;
+    }
+    a {
+      color: #FFD700;
+      font-weight: bold;
+      font-size: 1.2rem;
+      text-decoration: none;
+      border: 2px solid #FFD700;
+      padding: 10px 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #FFD700;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      align-self: center;
+    }
+    a:hover {
+      background-color: #FFD700;
+      color: #000;
+      box-shadow: 0 0 20px #FFD700, 0 0 40px #FFD700;
+    }
+
+    @keyframes glow {
+      from {
+        text-shadow:
+          0 0 10px #FFD700,
+          0 0 20px #FFD700,
+          0 0 30px #FFD700,
+          0 0 40px #FFD700,
+          0 0 50px #FFD700;
+      }
+      to {
+        text-shadow:
+          0 0 20px #FFEF00,
+          0 0 30px #FFEF00,
+          0 0 40px #FFEF00,
+          0 0 50px #FFEF00,
+          0 0 60px #FFEF00;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Ačiū už užklausą!</h1>
+  <p>Mes susisieksime su jumis kuo greičiau.</p>
+  <a href="index.html">Grįžti į pradžią</a>
+
+</body>
+</html>
