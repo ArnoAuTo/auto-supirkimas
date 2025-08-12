@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ArnoAuTo supirkimo užklausa</title>
+  <title>ArnoAuTo supirkimas</title>
   <style>
     @keyframes backgroundGradient {
       0% { background-position: 0% 50%; }
@@ -81,15 +81,6 @@
       text-align: center;
       color: #FFD700;
     }
-    #padeka {
-      display: none;
-      text-align: center;
-      font-size: 1.2rem;
-      margin-top: 30px;
-      font-weight: bold;
-      color: #FFD700;
-      text-shadow: 0 0 8px #FFD700, 0 0 20px #FFD700;
-    }
     form {
       animation: fadeIn 1s ease forwards;
       opacity: 0;
@@ -115,7 +106,7 @@
 </head>
 <body>
 
-  <h1>Auto supirkimo užklausa</h1>
+  <h1>ArnoAuTo supirkimas</h1>
 
   <form id="auto-form" enctype="multipart/form-data">
     <label for="vardas">Vardas:</label>
@@ -134,7 +125,6 @@
   </form>
 
   <p id="status"></p>
-  <div id="padeka">✅ Ačiū! Jūsų užklausa gauta.</div>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
@@ -189,10 +179,8 @@
           timestamp: new Date()
         });
 
-        // Rodyti padėką ir slėpti formą bei statusą
-        document.getElementById("padeka").style.display = "block";
-        document.getElementById("auto-form").style.display = "none";
-        document.getElementById("status").style.display = "none";
+        // Nukreipimas į padėkos puslapį
+        window.location.href = "padekos.html";
 
       } catch (error) {
         console.error("Klaida siunčiant duomenis:", error);
